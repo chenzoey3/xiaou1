@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>我的音樂世界 🎵</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
+
+:root {
+–bg: #0f0c1a;
+–card-bg: #1e1833;
+–accent1: #ff6b9d;
+–accent2: #c77dff;
+–accent3: #ffd166;
+–yes-color: #06d6a0;
+–no-color: #ff4d6d;
+–text: #f0e6ff;
+–glow1: rgba(255,107,157,0.5);
+–glow2: rgba(199,125,255,0.5);
+}
+
+- { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+font-family: ‘Nunito’, sans-serif;
+background: var(–bg);
+color: var(–text);
+min-height: 100vh;
+overflow-x: hidden;
+}
+
+/* ── SPLASH ── */
+#splash {
+position: fixed; inset: 0; z-index: 9999;
+background: linear-gradient(135deg, #0f0c1a, #1e1033);
+display: flex; flex-direction: column;
+align-items: center; justify-content: center; gap: 20px;
+}
+#splash .sp-icon { font-size: 5rem; animation: bounce 1.2s ease-in-out infinite alternate; }
+@keyframes bounce { from { transform: scale(1); } to { transform: scale(1.2); } }
+#splash h2 { font-size: 2rem; font-weight: 900; color: #f0e6ff; text-align: center; }
+#splash p  { color: rgba(240,230,255,0.6); font-size: 1rem; }
+#start-btn {
+padding: 22px 56px;
+border-radius: 60px;
+border: none;
+background: linear-gradient(135deg, #ff6b9d, #c77dff);
+color: #fff;
+font-family: ‘Nunito’, sans-serif;
+font-size: 1.6rem;
+font-weight: 900;
+cursor: pointer;
+box-shadow: 0 0 40px rgba(255,107,157,0.6);
+animation: glow 1.5s ease-in-out infinite alternate;
+}
+@keyframes glow {
+from { box-shadow: 0 0 20px rgba(255,107,157,0.4); }
+to   { box-shadow: 0 0 55px rgba(199,125,255,0.8); }
+}
+
+/* ── MAIN APP ── */
+#app { display: none; }
+
+body::before {
+content: ‘’;
+position: fixed; inset: 0;
+background:
+radial-gradient(ellipse at 20% 20%, rgba(199,125,255,0.12) 0%, transparent 50%),
+radial-gradient(ellipse at 80% 80%, rgba(255,107,157,0.1) 0%, transparent 50%);
+pointer-events: none; z-index: 0;
+}
+
+.container {
+position: relative; z-index: 1;
+max-width: 900px; margin: 0 auto;
+padding: 20px 16px 100px;
+}
+
+h1 {
+text-align: center;
+font-size: clamp(1.6rem, 5vw, 2.4rem);
+font-weight: 900;
+background: linear-gradient(135deg, var(–accent1), var(–accent2), var(–accent3));
+-webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+margin-bottom: 6px;
+}
+.subtitle { text-align: center; font-size: 1rem; color: rgba(240,230,255,0.6); margin-bottom: 24px; }
+
+/* Tabs */
+.tabs { display: flex; justify-content: center; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; }
+.tab-btn {
+padding: 10px 20px; border-radius: 50px;
+border: 2px solid transparent;
+font-family: ‘Nunito’, sans-serif; font-size: 0.95rem; font-weight: 700;
+cursor: pointer; background: var(–card-bg); color: rgba(240,230,255,0.6);
+transition: all 0.2s;
+}
+.tab-btn.active {
+background: linear-gradient(135deg, var(–accent1), var(–accent2));
+color: white; box-shadow: 0 0 20px var(–glow1);
+}
+
+.section { display: none; }
+.section.active { display: block; }
+
+.cards-grid {
+display: grid;
+grid-template-columns: repeat(2, 1fr);
+gap: 12px;
+}
+@media (min-width: 480px) { .cards-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 700px) { .cards-grid { grid-template-columns: repeat(4, 1fr); } }
+
+.card {
+background: var(–card-bg);
+border-radius: 18px;
+border: 2px solid rgba(199,125,255,0.2);
+cursor: pointer;
+transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+position: relative; overflow: hidden;
+user-select: none;
+}
+.card:active { transform: scale(0.93); }
+.card.playing {
+border-color: var(–accent1);
+box-shadow: 0 0 28px var(–glow1);
+animation: pop 0.35s ease;
+}
+@keyframes pop { 0%{transform:scale(1)} 50%{transform:scale(1.08)} 100%{transform:scale(1)} }
+
+.card-emoji { font-size: 3rem; text-align: center; padding: 18px 8px 6px; display: block; line-height: 1; }
+.card-label { text-align: center; font-weight: 700; font-size: 0.9rem; padding: 0 6px 6px; }
+.card-sub   { text-align: center; font-size: 0.72rem; color: rgba(240,230,255,0.45); padding: 0 6px 12px; margin-top: -4px; }
+
+.section-label {
+font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em;
+text-transform: uppercase; color: var(–accent2);
+margin-bottom: 10px; padding-left: 4px;
+}
+.cards-section { margin-bottom: 26px; }
+
+/* Now playing */
+.now-playing {
+position: fixed; bottom: 0; left: 0; right: 0;
+background: rgba(15,12,26,0.96);
+backdrop-filter: blur(12px);
+border-top: 1px solid rgba(199,125,255,0.2);
+padding: 10px 20px;
+display: flex; align-items: center; gap: 12px;
+z-index: 100;
+transform: translateY(100%);
+transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.now-playing.show { transform: translateY(0); }
+.np-emoji { font-size: 1.8rem; }
+.np-info { flex: 1; }
+.np-title { font-weight: 700; font-size: 0.95rem; }
+.np-bars { display: flex; align-items: flex-end; gap: 3px; height: 20px; }
+.np-bar { width: 4px; border-radius: 2px; background: var(–accent1); animation: bar 0.7s ease-in-out infinite alternate; }
+.np-bar:nth-child(2) { animation-delay:0.15s; background:var(–accent2); }
+.np-bar:nth-child(3) { animation-delay:0.3s; background:var(–accent3); }
+.np-bar:nth-child(4) { animation-delay:0.45s; }
+@keyframes bar { from{height:4px} to{height:18px} }
+.stop-btn {
+background: rgba(255,77,109,0.2); border: 1px solid rgba(255,77,109,0.4);
+color: #ff4d6d; border-radius: 50%; width: 36px; height: 36px;
+font-size: 1rem; cursor: pointer;
+}
+
+/* YES/NO */
+.yn-wrapper { display:flex; flex-direction:column; align-items:center; gap:18px; padding:10px 0 20px; }
+.yn-question { background:var(–card-bg); border-radius:18px; border:2px solid rgba(199,125,255,0.2); padding:18px 20px; width:100%; max-width:500px; }
+.yn-question label { display:block; font-size:0.8rem; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; color:var(–accent2); margin-bottom:8px; }
+.yn-question input {
+width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(199,125,255,0.3);
+border-radius:10px; padding:10px 14px; color:var(–text);
+font-family:‘Nunito’,sans-serif; font-size:1.05rem; font-weight:700; text-align:center; outline:none;
+}
+.yn-question input:focus { border-color: var(–accent2); }
+.yn-display { font-size:clamp(1.1rem,4vw,1.5rem); font-weight:900; text-align:center; min-height:2.5em; padding:0 16px; }
+.yn-buttons { display:flex; gap:16px; width:100%; max-width:500px; }
+.yn-btn {
+flex:1; padding:26px 8px; border-radius:22px; border:none;
+font-family:‘Nunito’,sans-serif; font-weight:900; cursor:pointer;
+display:flex; flex-direction:column; align-items:center; gap:6px;
+transition: transform 0.2s;
+}
+.yn-btn:active { transform: scale(0.9); }
+.yn-btn .be { font-size:clamp(2.2rem,7vw,3.2rem); }
+.yn-btn .bl { font-size:clamp(1.1rem,4vw,1.5rem); }
+.yes-btn { background:linear-gradient(135deg,#06d6a0,#0ac988); color:#fff; box-shadow:0 6px 24px rgba(6,214,160,0.3); }
+.no-btn  { background:linear-gradient(135deg,#ff4d6d,#e63956); color:#fff; box-shadow:0 6px 24px rgba(255,77,109,0.3); }
+
+/* Feedback */
+.fb-overlay { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; z-index:200; }
+.fb-text { font-size:clamp(4rem,18vw,8rem); font-weight:900; opacity:0; transform:scale(0.5); text-shadow:0 0 40px currentColor; }
+.fb-text.show { animation: fbpop 1.2s forwards; }
+@keyframes fbpop {
+0%   { opacity:0; transform:scale(0.5); }
+20%  { opacity:1; transform:scale(1.1); }
+50%  { opacity:1; transform:scale(1); }
+80%  { opacity:1; transform:scale(1); }
+100% { opacity:0; transform:scale(1.2) translateY(-20px); }
+}
+.fb-yes { color: var(–yes-color); }
+.fb-no  { color: var(–no-color); }
+
+.conf { position:fixed; width:10px; height:10px; pointer-events:none; z-index:300; border-radius:2px; animation:fall 1.4s ease-in forwards; }
+@keyframes fall { 0%{opacity:1;transform:translateY(0) rotate(0)} 100%{opacity:0;transform:translateY(65vh) rotate(720deg)} }
+
+::-webkit-scrollbar { width:5px; }
+::-webkit-scrollbar-thumb { background:rgba(199,125,255,0.3); border-radius:3px; }
+</style>
+
+</head>
+<body>
+
+<!-- ── SPLASH ── -->
+
+<div id="splash">
+  <div class="sp-icon">🎵</div>
+  <h2>我的音樂世界</h2>
+  <p>按下按鈕，開始！</p>
+  <button id="start-btn" onclick="startApp()">▶ 開始！</button>
+</div>
+
+<!-- ── MAIN APP ── -->
+
+<div id="app">
+<div class="container">
+  <h1>🎵 我的音樂世界 🎵</h1>
+  <p class="subtitle">點圖片，聽音樂，表達自己！</p>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab(this,'music')">🎵 音樂&amp;帥哥</button>
+    <button class="tab-btn" onclick="switchTab(this,'daily')">💬 日常對話</button>
+    <button class="tab-btn" onclick="switchTab(this,'yn')">✋ 好不好</button>
+  </div>
+
+  <!-- MUSIC -->
+
+  <div id="section-music" class="section active">
+    <div class="cards-section">
+      <div class="section-label">🌟 帥哥明星</div>
+      <div class="cards-grid">
+        <div class="card" onclick="play(this,'kpop1')"><span class="card-emoji">🧑‍🎤</span><div class="card-label">K-POP 帥哥</div><div class="card-sub">流行電子節拍</div></div>
+        <div class="card" onclick="play(this,'rock')"><span class="card-emoji">🎸</span><div class="card-label">搖滾帥哥</div><div class="card-sub">吉他搖滾</div></div>
+        <div class="card" onclick="play(this,'jazz')"><span class="card-emoji">🎷</span><div class="card-label">爵士型男</div><div class="card-sub">輕鬆爵士</div></div>
+        <div class="card" onclick="play(this,'idol')"><span class="card-emoji">💜</span><div class="card-label">偶像歌手</div><div class="card-sub">甜蜜流行</div></div>
+      </div>
+    </div>
+    <div class="cards-section">
+      <div class="section-label">🎶 我喜歡的音樂</div>
+      <div class="cards-grid">
+        <div class="card" onclick="play(this,'happy')"><span class="card-emoji">😊</span><div class="card-label">開心！</div><div class="card-sub">歡樂節拍</div></div>
+        <div class="card" onclick="play(this,'calm')"><span class="card-emoji">🌸</span><div class="card-label">放鬆</div><div class="card-sub">溫柔旋律</div></div>
+        <div class="card" onclick="play(this,'dance')"><span class="card-emoji">💃</span><div class="card-label">跳舞！</div><div class="card-sub">動感舞曲</div></div>
+        <div class="card" onclick="play(this,'dreamy')"><span class="card-emoji">🌙</span><div class="card-label">夢幻</div><div class="card-sub">星空旋律</div></div>
+        <div class="card" onclick="play(this,'exciting')"><span class="card-emoji">🔥</span><div class="card-label">超興奮！</div><div class="card-sub">強力節拍</div></div>
+        <div class="card" onclick="play(this,'cute')"><span class="card-emoji">🐱</span><div class="card-label">可愛</div><div class="card-sub">萌系音樂</div></div>
+        <div class="card" onclick="play(this,'piano')"><span class="card-emoji">🎹</span><div class="card-label">鋼琴</div><div class="card-sub">優雅古典</div></div>
+        <div class="card" onclick="play(this,'cheer')"><span class="card-emoji">🎉</span><div class="card-label">慶祝！</div><div class="card-sub">歡呼喝采</div></div>
+      </div>
+    </div>
+    <div class="cards-section">
+      <div class="section-label">💬 我想說</div>
+      <div class="cards-grid">
+        <div class="card" onclick="play(this,'more')"><span class="card-emoji">🙋</span><div class="card-label">還要！</div><div class="card-sub">再一次</div></div>
+        <div class="card" onclick="play(this,'stp')"><span class="card-emoji">✋</span><div class="card-label">停止</div><div class="card-sub">夠了</div></div>
+        <div class="card" onclick="play(this,'love')"><span class="card-emoji">❤️</span><div class="card-label">我喜歡</div><div class="card-sub">愛心音效</div></div>
+        <div class="card" onclick="play(this,'hello')"><span class="card-emoji">👋</span><div class="card-label">你好！</div><div class="card-sub">打招呼</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAILY -->
+
+  <div id="section-daily" class="section">
+    <div class="cards-section">
+      <div class="section-label">😊 我的感受</div>
+      <div class="cards-grid">
+        <div class="card" onclick="play(this,'d_like')"><span class="card-emoji">😍</span><div class="card-label">我喜歡</div><div class="card-sub">好棒！</div></div>
+        <div class="card" onclick="play(this,'d_dislike')"><span class="card-emoji">😣</span><div class="card-label">我不喜歡</div><div class="card-sub">不要這個</div></div>
+        <div class="card" onclick="play(this,'d_happy')"><span class="card-emoji">😄</span><div class="card-label">我很開心</div><div class="card-sub">超開心！</div></div>
+        <div class="card" onclick="play(this,'d_sad')"><span class="card-emoji">😢</span><div class="card-label">我不開心</div><div class="card-sub">有點難過</div></div>
+        <div class="card" onclick="play(this,'d_scared')"><span class="card-emoji">😨</span><div class="card-label">我害怕</div><div class="card-sub">好可怕</div></div>
+        <div class="card" onclick="play(this,'d_tired')"><span class="card-emoji">😴</span><div class="card-label">我很累</div><div class="card-sub">想休息</div></div>
+        <div class="card" onclick="play(this,'d_pain')"><span class="card-emoji">😖</span><div class="card-label">我不舒服</div><div class="card-sub">有點痛</div></div>
+        <div class="card" onclick="play(this,'d_excited')"><span class="card-emoji">🤩</span><div class="card-label">好興奮！</div><div class="card-sub">期待！</div></div>
+      </div>
+    </div>
+    <div class="cards-section">
+      <div class="section-label">🍽️ 我的需求</div>
+      <div class="cards-grid">
+        <div class="card" onclick="play(this,'d_water')"><span class="card-emoji">💧</span><div class="card-label">想喝水</div><div class="card-sub">口渴了</div></div>
+        <div class="card" onclick="play(this,'d_eat')"><span class="card-emoji">🍱</span><div class="card-label">想吃東西</div><div class="card-sub">肚子餓了</div></div>
+        <div class="card" onclick="play(this,'d_toilet')"><span class="card-emoji">🚽</span><div class="card-label">要上廁所</div><div class="card-sub">很急！</div></div>
+        <div class="card" onclick="play(this,'d_home')"><span class="card-emoji">🏠</span><div class="card-label">想回家</div><div class="card-sub">我想回家</div></div>
+        <div class="card" onclick="play(this,'d_sleep')"><span class="card-emoji">🛏️</span><div class="card-label">想睡覺</div><div class="card-sub">好想躺下</div></div>
+        <div class="card" onclick="play(this,'d_outside')"><span class="card-emoji">🌳</span><div class="card-label">想出去</div><div class="card-sub">想去外面</div></div>
+        <div class="card" onclick="play(this,'d_music_want')"><span class="card-emoji">🎵</span><div class="card-label">想聽音樂</div><div class="card-sub">放音樂！</div></div>
+        <div class="card" onclick="play(this,'d_hug')"><span class="card-emoji">🤗</span><div class="card-label">想抱抱</div><div class="card-sub">需要抱抱</div></div>
+      </div>
+    </div>
+    <div class="cards-section">
+      <div class="section-label">👥 關於別人</div>
+      <div class="cards-grid">
+        <div class="card" onclick="play(this,'d_know')"><span class="card-emoji">🤝</span><div class="card-label">我認識他</div><div class="card-sub">我知道這人</div></div>
+        <div class="card" onclick="play(this,'d_dontknow')"><span class="card-emoji">🤷</span><div class="card-label">我不認識</div><div class="card-sub">不知道是誰</div></div>
+        <div class="card" onclick="play(this,'d_friend')"><span class="card-emoji">👯</span><div class="card-label">想找朋友</div><div class="card-sub">想一起玩</div></div>
+        <div class="card" onclick="play(this,'d_alone')"><span class="card-emoji">🧘</span><div class="card-label">想一個人</div><div class="card-sub">需要安靜</div></div>
+      </div>
+    </div>
+    <div class="cards-section">
+      <div class="section-label">✋ 溝通用語</div>
+      <div class="cards-grid">
+        <div class="card" onclick="play(this,'d_yes')"><span class="card-emoji">✅</span><div class="card-label">對！是的</div><div class="card-sub">我同意</div></div>
+        <div class="card" onclick="play(this,'d_no')"><span class="card-emoji">❌</span><div class="card-label">不是！</div><div class="card-sub">我不同意</div></div>
+        <div class="card" onclick="play(this,'d_wait')"><span class="card-emoji">⏳</span><div class="card-label">等一下</div><div class="card-sub">請等我</div></div>
+        <div class="card" onclick="play(this,'d_help')"><span class="card-emoji">🆘</span><div class="card-label">需要幫忙</div><div class="card-sub">請幫我！</div></div>
+        <div class="card" onclick="play(this,'d_thanks')"><span class="card-emoji">🙏</span><div class="card-label">謝謝你</div><div class="card-sub">感謝！</div></div>
+        <div class="card" onclick="play(this,'d_again')"><span class="card-emoji">🔁</span><div class="card-label">再說一次</div><div class="card-sub">沒聽清楚</div></div>
+        <div class="card" onclick="play(this,'d_ok')"><span class="card-emoji">💡</span><div class="card-label">我懂了</div><div class="card-sub">明白了！</div></div>
+        <div class="card" onclick="play(this,'d_notok')"><span class="card-emoji">❓</span><div class="card-label">我不懂</div><div class="card-sub">聽不懂</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- YES/NO -->
+
+  <div id="section-yn" class="section">
+    <div class="yn-wrapper">
+      <div class="yn-question">
+        <label>問題（可以輸入）</label>
+        <input type="text" id="q-input" value="你喜歡這首歌嗎？" />
+      </div>
+      <div class="yn-display" id="yn-disp">👇 按下按鈕回答問題</div>
+      <div class="yn-buttons">
+        <button class="yn-btn yes-btn" onclick="answerYN('yes')">
+          <span class="be">👍</span><span class="bl">好！</span>
+        </button>
+        <button class="yn-btn no-btn" onclick="answerYN('no')">
+          <span class="be">👎</span><span class="bl">不好</span>
+        </button>
+      </div>
+      <p style="color:rgba(240,230,255,0.4);font-size:0.85rem;text-align:center">按「好！」或「不好」會有聲音和動畫 🎵</p>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- Now playing bar -->
+
+<div class="now-playing" id="np-bar">
+  <div class="np-emoji" id="np-em">🎵</div>
+  <div class="np-info"><div class="np-title" id="np-ttl">正在播放</div></div>
+  <div class="np-bars">
+    <div class="np-bar" style="height:8px"></div>
+    <div class="np-bar" style="height:14px"></div>
+    <div class="np-bar" style="height:6px"></div>
+    <div class="np-bar" style="height:12px"></div>
+  </div>
+  <button class="stop-btn" onclick="stopAll()">⏹</button>
+</div>
+
+<div class="fb-overlay"><div class="fb-text" id="fb-txt"></div></div>
+
+<script>
+var AC = null;
+var curGain = null;
+
+function startApp() {
+  AC = new (window.AudioContext || window.webkitAudioContext)();
+  AC.resume();
+  // Unlock with silent buffer (iOS requirement)
+  var buf = AC.createBuffer(1,1,22050);
+  var src = AC.createBufferSource();
+  src.buffer = buf; src.connect(AC.destination); src.start(0);
+  // Welcome chime
+  var g = AC.createGain();
+  g.gain.value = 0.4;
+  g.connect(AC.destination);
+  [523,659,784,1047].forEach(function(f,i){ t(g,f,i*0.15,0.3,'sine',0.35); });
+  // Show app
+  document.getElementById('splash').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+}
+
+function t(dst, freq, start, dur, type, vol) {
+  var o = AC.createOscillator();
+  var g = AC.createGain();
+  o.type = type || 'sine';
+  o.frequency.value = freq;
+  g.gain.setValueAtTime(0.001, AC.currentTime+start);
+  g.gain.linearRampToValueAtTime(vol||0.3, AC.currentTime+start+0.02);
+  g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime+start+dur);
+  o.connect(g); g.connect(dst);
+  o.start(AC.currentTime+start);
+  o.stop(AC.currentTime+start+dur+0.05);
+}
+
+function dk(dst, start, kick) {
+  var o = AC.createOscillator();
+  var g = AC.createGain();
+  if(kick){
+    o.frequency.setValueAtTime(150, AC.currentTime+start);
+    o.frequency.exponentialRampToValueAtTime(0.001, AC.currentTime+start+0.3);
+    g.gain.setValueAtTime(0.8, AC.currentTime+start);
+    g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime+start+0.3);
+  } else {
+    o.type='sawtooth'; o.frequency.value=180;
+    g.gain.setValueAtTime(0.22, AC.currentTime+start);
+    g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime+start+0.1);
+  }
+  o.connect(g); g.connect(dst);
+  o.start(AC.currentTime+start);
+  o.stop(AC.currentTime+start+0.35);
+}
+
+function mkG(v) {
+  var g = AC.createGain();
+  g.gain.value = v||0.55;
+  g.connect(AC.destination);
+  return g;
+}
+
+function stopAll() {
+  if(curGain){ try{curGain.disconnect();}catch(e){} curGain=null; }
+  document.getElementById('np-bar').classList.remove('show');
+  document.querySelectorAll('.card.playing').forEach(function(c){c.classList.remove('playing');});
+}
+
+function showBar(em,ttl) {
+  document.getElementById('np-em').textContent=em;
+  document.getElementById('np-ttl').textContent=ttl;
+  document.getElementById('np-bar').classList.add('show');
+}
+
+var N={C4:262,D4:294,E4:330,F4:349,G4:392,A4:440,B4:494,
+        C5:523,D5:587,E5:659,F5:698,G5:784,A5:880,
+        Bb4:466,Ab4:415,Gb4:370,Eb5:622};
+
+var SND={
+  kpop1:  ['🧑‍🎤','K-POP 帥哥', function(g){[[N.E5,0],[N.D5,.3],[N.C5,.6],[N.G4,.9],[N.A4,1.2],[N.C5,1.5],[N.E5,1.8]].forEach(function(x){t(g,x[0],x[1],.25,'square',.3);});for(var i=0;i<7;i++){dk(g,i*.27,true);dk(g,i*.27+.14,false);}}],
+  rock:   ['🎸','搖滾帥哥',     function(g){[[N.E4,0],[N.G4,.2],[N.A4,.4],[N.E4,.6],[N.Bb4,1],[N.A4,1.2],[N.G4,1.6]].forEach(function(x){t(g,x[0],x[1],.17,'sawtooth',.26);});for(var i=0;i<6;i++){dk(g,i*.32,true);dk(g,i*.32+.16,false);}}],
+  jazz:   ['🎷','爵士型男',     function(g){[[N.C4,0],[N.E4,.3],[N.G4,.55],[N.Bb4,.75],[N.A4,1.1],[N.F4,1.4],[N.G4,1.8]].forEach(function(x){t(g,x[0],x[1],.5,'triangle',.28);});}],
+  idol:   ['💜','偶像歌手',     function(g){[[N.C5,0],[N.E5,.22],[N.G5,.44],[N.A5,.7],[N.G5,.95],[N.E5,1.2],[N.C5,1.5]].forEach(function(x){t(g,x[0],x[1],.2,'sine',.3);});}],
+  happy:  ['😊','開心！',       function(g){[[N.C5,0],[N.D5,.2],[N.E5,.4],[N.G5,.7],[N.A5,.95],[N.G5,1.2]].forEach(function(x){t(g,x[0],x[1],.17,'sine',.28);});for(var i=0;i<5;i++) dk(g,i*.3,true);}],
+  calm:   ['🌸','放鬆',         function(g){[[N.C5,0],[N.E5,.6],[N.G5,1.2],[N.A5,1.8],[N.G5,2.5],[N.E5,3.2]].forEach(function(x){t(g,x[0],x[1],.6,'sine',.24);});}],
+  dance:  ['💃','跳舞！',       function(g){for(var i=0;i<8;i++)dk(g,i*.25,i%2===0);[[N.A4,0],[N.C5,.5],[N.E5,1],[N.G5,1.5]].forEach(function(x){t(g,x[0],x[1],.22,'sawtooth',.2);});}],
+  dreamy: ['🌙','夢幻',         function(g){[N.C5,N.E5,N.G5,N.B4,N.D5,N.F5,N.A4,N.C5].forEach(function(f,i){t(g,f,i*.22,.35,'sine',.2);});}],
+  exciting:['🔥','超興奮！',   function(g){for(var i=0;i<10;i++) dk(g,i*.18,i%3===0);[[N.E5,0],[N.G5,.18],[N.A5,.36],[N.G5,.54],[N.E5,.72],[N.C5,.9]].forEach(function(x){t(g,x[0],x[1],.16,'square',.26);});}],
+  cute:   ['🐱','可愛',         function(g){[N.C5,N.E5,N.G5,N.C5,N.B4,N.A4,N.G4].forEach(function(f,i){t(g,f,i*.15,.13,'sine',.26);t(g,f*2,i*.15,.08,'sine',.07);});}],
+  piano:  ['🎹','鋼琴',         function(g){[[N.C4,0],[N.E4,.3],[N.G4,.6],[N.C5,.9],[N.B4,1.2],[N.G4,1.5]].forEach(function(x){t(g,x[0],x[1],.6,'triangle',.36);});}],
+  cheer:  ['🎉','慶祝！',       function(g){[[N.C5,0],[N.E5,.1],[N.G5,.2],[N.C5*2,.35],[N.G5,.5],[N.C5*2,.65]].forEach(function(x){t(g,x[0],x[1],.2,'square',.28);});for(var i=0;i<6;i++) dk(g,i*.15,true);}],
+  more:   ['🙋','還要！',       function(g){[N.C5,N.E5,N.G5,N.C5*2].forEach(function(f,i){t(g,f,i*.18,.15,'sine',.3);});}],
+  stp:    ['✋','停止',          function(g){[N.C5,N.A4,N.F4].forEach(function(f,i){t(g,f,i*.2,.25,'triangle',.26);});}],
+  love:   ['❤️','我喜歡',       function(g){[N.E5,N.G5,N.B4,N.E5,N.G5].forEach(function(f,i){t(g,f,i*.22,.3,'sine',.28);});}],
+  hello:  ['👋','你好！',       function(g){[N.C5,N.E5,N.G5,N.A5,N.G5].forEach(function(f,i){t(g,f,i*.2,.18,'sine',.3);});}],
+  // Daily feelings
+  d_like:    ['😍','我喜歡',   function(g){[N.E5,N.G5,N.B4,N.E5*2].forEach(function(f,i){t(g,f,i*.16,.22,'sine',.3);});}],
+  d_dislike: ['😣','我不喜歡', function(g){[N.E5,N.Eb5,N.D5,N.C5].forEach(function(f,i){t(g,f,i*.18,.25,'triangle',.26);});}],
+  d_happy:   ['😄','我很開心', function(g){[N.C5,N.E5,N.G5,N.C5*2,N.G5,N.E5].forEach(function(f,i){t(g,f,i*.17,.16,'sine',.26);});for(var i=0;i<4;i++) dk(g,i*.27,true);}],
+  d_sad:     ['😢','我不開心', function(g){[N.G4,N.F4,N.Eb5/2,N.D4].forEach(function(f,i){t(g,Math.max(f,80),i*.4,.5,'sine',.23);});}],
+  d_scared:  ['😨','我害怕',   function(g){[N.C5,N.B4,N.Bb4,N.A4,N.Ab4].forEach(function(f,i){t(g,f,i*.12,.14,'sawtooth',.17);});}],
+  d_tired:   ['😴','我很累',   function(g){[N.G4,N.E4,N.C4].forEach(function(f,i){t(g,f,i*.5,.65,'sine',.22);});}],
+  d_pain:    ['😖','我不舒服', function(g){[N.A4,N.Ab4,N.G4].forEach(function(f,i){t(g,f,i*.22,.3,'sawtooth',.18);});}],
+  d_excited: ['🤩','好興奮！', function(g){[N.C5,N.E5,N.G5,N.A5,N.G5,N.C5*2].forEach(function(f,i){t(g,f,i*.14,.13,'square',.23);});for(var i=0;i<5;i++) dk(g,i*.2,i%2===0);}],
+  // Daily needs
+  d_water:   ['💧','想喝水',   function(g){[N.C5,N.G5,N.E5,N.C5*2,N.G5].forEach(function(f,i){t(g,f,i*.2,.18,'sine',.26);});}],
+  d_eat:     ['🍱','想吃東西', function(g){[N.G4,N.A4,N.B4,N.C5,N.D5,N.E5].forEach(function(f,i){t(g,f,i*.18,.2,'triangle',.26);});}],
+  d_toilet:  ['🚽','要上廁所', function(g){[N.C5,N.E5,N.G5,N.A5].forEach(function(f,i){t(g,f,i*.1,.09,'square',.26);t(g,f,i*.1+.45,.09,'square',.26);});}],
+  d_home:    ['🏠','想回家',   function(g){[N.C4,N.E4,N.G4,N.C5,N.E5,N.G5,N.C5].forEach(function(f,i){t(g,f,i*.22,.28,'sine',.26);});}],
+  d_sleep:   ['🛏️','想睡覺',  function(g){[N.G4,N.E4,N.C4,196,130].forEach(function(f,i){t(g,f,i*.55,.65,'sine',.2);});}],
+  d_outside: ['🌳','想出去',   function(g){[N.C5,N.D5,N.E5,N.G5,N.A5,N.G5,N.E5].forEach(function(f,i){t(g,f,i*.16,.18,'sine',.24);});}],
+  d_music_want:['🎵','想聽音樂',function(g){[N.E5,N.G5,N.A5,N.G5,N.E5,N.C5*2].forEach(function(f,i){t(g,f,i*.2,.18,'sine',.26);});}],
+  d_hug:     ['🤗','想抱抱',   function(g){[N.C5,N.E5,N.G5,N.E5,N.C5].forEach(function(f,i){t(g,f,i*.3,.4,'sine',.24);});}],
+  // Social
+  d_know:    ['🤝','我認識他', function(g){[N.C5,N.E5,N.G5,N.C5*2,N.G5].forEach(function(f,i){t(g,f,i*.18,.2,'sine',.28);});}],
+  d_dontknow:['🤷','我不認識', function(g){[N.G4,N.A4,N.G4,N.F4,N.G4].forEach(function(f,i){t(g,f,i*.2,.22,'triangle',.24);});}],
+  d_friend:  ['👯','想找朋友', function(g){[N.C5,N.D5,N.E5,N.G5,N.A5].forEach(function(f,i){t(g,f,i*.18,.16,'sine',.26);});for(var i=0;i<4;i++) dk(g,i*.27,true);}],
+  d_alone:   ['🧘','想一個人', function(g){[N.C5,N.E5,N.G5,N.A5,N.G5,N.E5].forEach(function(f,i){t(g,f,i*.6,.65,'sine',.2);});}],
+  // Communication
+  d_yes:     ['✅','對！是的', function(g){[N.C5,N.E5,N.G5,N.C5*2].forEach(function(f,i){t(g,f,i*.15,.2,'sine',.32);});}],
+  d_no:      ['❌','不是！',   function(g){[N.A4,N.Ab4,N.G4,N.Gb4].forEach(function(f,i){t(g,f,i*.15,.22,'sawtooth',.2);});}],
+  d_wait:    ['⏳','等一下',   function(g){[N.C5,N.C5,N.C5].forEach(function(f,i){t(g,f,i*.35,.18,'sine',.24);});}],
+  d_help:    ['🆘','需要幫忙', function(g){[N.C5,N.E5,N.G5,N.A5,N.G5,N.A5].forEach(function(f,i){t(g,f,i*.15,.14,'square',.26);});for(var i=0;i<3;i++) dk(g,i*.18,true);}],
+  d_thanks:  ['🙏','謝謝你',   function(g){[N.E5,N.G5,N.B4,N.E5,N.G5].forEach(function(f,i){t(g,f,i*.22,.3,'sine',.28);});}],
+  d_again:   ['🔁','再說一次', function(g){[[N.C5,0],[N.E5,.2],[N.G5,.4],[N.C5,.7],[N.E5,.9]].forEach(function(x){t(g,x[0],x[1],.18,'sine',.24);});}],
+  d_ok:      ['💡','我懂了',   function(g){[N.C5,N.E5,N.G5,N.C5*2].forEach(function(f,i){t(g,f,i*.15,.2,'sine',.3);});t(g,N.C5*2,.6,.4,'sine',.26);}],
+  d_notok:   ['❓','我不懂',   function(g){[N.G4,N.A4,N.G4,N.Bb4,N.G4].forEach(function(f,i){t(g,f,i*.18,.2,'triangle',.24);});}]
+};
+
+function play(card, key) {
+  stopAll();
+  var g = mkG(0.55);
+  curGain = g;
+  var s = SND[key];
+  if (!s) return;
+  s[2](g);
+  document.querySelectorAll('.card.playing').forEach(function(c){c.classList.remove('playing');});
+  if(card) card.classList.add('playing');
+  showBar(s[0], s[1]);
+}
+
+function answerYN(ans) {
+  var q = document.getElementById('q-input').value || '你喜歡這首歌嗎？';
+  var disp = document.getElementById('yn-disp');
+  var fb = document.getElementById('fb-txt');
+  stopAll();
+  var g = mkG(0.5);
+  curGain = g;
+  if(ans==='yes'){
+    [N.C5,N.E5,N.G5,N.C5*2].forEach(function(f,i){t(g,f,i*.15,.2,'sine',.36);});
+    disp.innerHTML='<span style="color:var(--yes-color)">✅ 好！ 👍</span><br><small style="opacity:.7">'+q+'</small>';
+    fb.textContent='👍 好！'; fb.className='fb-text fb-yes';
+    showBar('👍','好！很棒！');
+    confetti();
+  } else {
+    [N.A4,N.Ab4,N.G4,N.Gb4].forEach(function(f,i){t(g,f,i*.15,.22,'sawtooth',.2);});
+    disp.innerHTML='<span style="color:var(--no-color)">❌ 不好 👎</span><br><small style="opacity:.7">'+q+'</small>';
+    fb.textContent='👎 不好'; fb.className='fb-text fb-no';
+    showBar('👎','不好');
+  }
+  fb.classList.remove('show'); void fb.offsetWidth; fb.classList.add('show');
+  setTimeout(function(){fb.classList.remove('show');}, 1300);
+}
+
+function confetti() {
+  var cols=['#ff6b9d','#c77dff','#ffd166','#06d6a0','#fff'];
+  for(var i=0;i<28;i++){
+    var c=document.createElement('div');
+    c.className='conf';
+    c.style.cssText='left:'+Math.random()*100+'vw;top:'+(5+Math.random()*20)+'vh;background:'+cols[Math.floor(Math.random()*cols.length)]+';border-radius:'+(Math.random()>.5?'50%':'2px')+';animation-duration:'+(1+Math.random()*0.6)+'s;animation-delay:'+(Math.random()*0.3)+'s';
+    document.body.appendChild(c);
+    setTimeout((function(el){return function(){el.remove();};})(c), 2200);
+  }
+}
+
+function switchTab(btn, id) {
+  document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active');});
+  document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('section-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+
+</body>
+</html>
